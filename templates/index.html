@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Prediction</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8f9fa; /* Light background for better contrast */
+        }
+        .form-container {
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
+            background-color: white; /* White background for the form */
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2 class="text-center">Health Prediction Form</h2>
+        <form id="healthForm">
+            <div class="form-group">
+                <label for="age">Age:</label>
+                <input type="number" class="form-control" id="age" name="age" required>
+            </div>
+
+            <div class="form-group">
+                <label for="gender">Gender:</label>
+                <select class="form-control" id="gender" name="gender" required>
+                    <option value="0">Male</option>
+                    <option value="1">Female</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="blood_pressure">Blood Pressure:</label>
+                <input type="number" class="form-control" id="blood_pressure" name="blood_pressure" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cholesterol_levels">Cholesterol Levels:</label>
+                <input type="number" class="form-control" id="cholesterol_levels" name="cholesterol_levels" required>
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="getPrediction()">Get Prediction</button>
+        </form>
+
+        <div class="result text-center" id="result"></div>
+    </div>
+
+    <script>
+        async function getPrediction() {
+    const age = document.getElementById('age').value;
+    const gender = document.getElementById('gender').value;
+    const bloodPressure = document.getElementById('blood_pressure').value;
+    const cholesterolLevels = document.getElementById('cholesterol_levels').value;
+
+    // Input validation
+    if (isNaN(age) || isNaN(bloodPressure) || isNaN(cholesterolLevels)) {
+        document.getElementById('result').innerText = 'Please enter valid numeric values.';
+        return;
+    }
+
+    const data = {
+        age: parseInt(age),
+        gender: parseInt(gender),
+        blood_pressure: parseInt(bloodPressure),
+        cholesterol_levels: parseInt(cholesterolLevels)
+    };
+
+    console.log("Data being sent:", data); // Log the data being sent
+
+    try {
+        const response = await fetch('http://127.0.0.1:5000/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            const errorResponse = await response.json();
+            throw new Error(errorResponse.error || 'Something went wrong with the prediction.');
+        }
+
+        const result = await response.json();
+
+        // Convert prediction to a percentage with zero decimal places
+        if (result.prediction !== undefined) {
+            const predictionPercentage = Math.round(result.prediction * 100);
+            document.getElementById('result').innerText =
+                `You have a ${predictionPercentage}% likelihood of having heart disease.`;
+        } else {
+            document.getElementById('result').innerText = 'Error: ' + result.error;
+        }
+    } catch (error) {
+        console.error("Error occurred:", error); // Log errors to the console
+        document.getElementById('result').innerText = 'Error: ' + error.message;
+    }
+}
+
+    </script>
+</body>
+</html>
